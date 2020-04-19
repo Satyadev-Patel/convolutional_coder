@@ -1,10 +1,10 @@
-# Created by: Satyadev Patel
+# Created by: Satyadev Patel & Nirmit Ghughu
 
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 import random
-
+import math
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -149,7 +149,7 @@ class Ui_MainWindow(object):
             self.output.clear()
     def channel(self):
         if self.bsc.isChecked()==True:
-            random_nums=[i/1000 for i in range(1,1000,1)]
+            random_nums=[i/10000 for i in range(1,10000,1)]
             prob,ok=QtWidgets.QInputDialog.getText(MainWindow, "BSC", "Enter Probability:")
             prob=float(prob)
             encoded_msg=self.encoded.text().split(" ")
@@ -174,7 +174,7 @@ class Ui_MainWindow(object):
                 msg=msg+str(a[i])+" "
             self.channel_output.setText(msg)
         if self.bec.isChecked()==True:
-            random_nums=[i/100 for i in range(1,100,1)]
+            random_nums=[i/10000 for i in range(1,10000,1)]
             prob,ok=QtWidgets.QInputDialog.getText(MainWindow, "BEC", "Enter Probability:")
             prob=float(prob)
             encoded_msg=self.encoded.text().split(" ")
@@ -198,6 +198,46 @@ class Ui_MainWindow(object):
             for i in range(0,len(a)):
                 msg=msg+str(a[i])+" "
             self.channel_output.setText(msg)
+        if self.gaussian.isChecked()==True:
+            encoded_msg=self.encoded.text().split(" ")
+            encoded_msg.pop(len(encoded_msg)-1)
+            for i in range(0,len(encoded_msg)):
+                encoded_msg[i]=int(encoded_msg[i])
+            a=encoded_msg
+            snr1,ok=QtWidgets.QInputDialog.getText(MainWindow, "Gaussian Channel", "Enter SNR in dB:")
+            snr1=float(snr1)
+            snr_linear=10**snr1
+            variance_square=1/snr_linear
+            variance=math.sqrt(variance_square)
+            f_term=1/(math.sqrt(2*3.14)*variance)
+            for i in range(0,len(a)):
+                a[i]=2*a[i]-1
+            ran_nums=[i/1000 for i in range(180,400,1)]
+            for i in range(0,len(a)):
+                a[i]=float(a[i])
+            for i in range(0,len(a)):
+                x1=random.choice(ran_nums)
+                x2=random.choice(ran_nums)
+                if x1>x2:
+                    value=math.sqrt(-2*variance*math.log((x1)/f_term))
+                else:
+                    value=math.sqrt(-2*variance*math.log(x2/f_term))
+                sign_chk=random.choice([0,1])
+                if sign_chk==0:
+                    value=-value
+                a[i]=a[i]+value
+            for i in range(0,len(a)):
+                if a[i]<0:
+                    a[i]=0
+                else:
+                    a[i]=1
+            msg=""
+            for i in range(0,len(a)):
+                msg=msg+str(a[i])+" "
+            self.channel_output.setText(msg)
+        if self.no_channel.isChecked()==True:
+            encoded_msg=self.encoded.text()
+            self.channel_output.setText(encoded_msg)
     def encoder(self):
         k=int(self.inputBits.text())
         x=[None]*k
@@ -351,6 +391,8 @@ class Ui_MainWindow(object):
         for i in range(0,len(self.e)):
             if self.cc[i]!=self.e[i]:
                 cnt=cnt+1
+        print('Number of error bits in decoded message: {}'.format(count))
+        print('Number of error bits in encoded message after passing through channel: {}'.format(cnt))
 
         
 
